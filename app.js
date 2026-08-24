@@ -36,7 +36,6 @@ const defaultChanges = [
 // aren't in the game yet but the stat is ready for them once they land.
 const EXCLUSIVE_TIERS = ["Huges", "Exclusives", "Titanics"];
 
-let pets = JSON.parse(localStorage.getItem("psx_values_pets") || "null") || seedPets;
 let changes = JSON.parse(localStorage.getItem("psx_values_changes") || "null") || defaultChanges;
 let currentRoute = location.hash.replace("#","") || "home";
 let currentPage = 1;

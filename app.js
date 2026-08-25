@@ -211,7 +211,7 @@ function renderHome() {
     <section class="hero">
       <div class="hero-copy">
         <div class="eyebrow">Pet Simulator X</div>
-        <h1>Know what your<br><span class="grad">pets are worth.</span></h1>
+        <h1>The official<br><span class="grad">PSX Reborn values.</span></h1>
         <p>Values get checked against trades and market activity, not guessed. Look a pet up, see what it's done lately, and run the numbers before you commit to a deal.</p>
         <div class="hero-actions">
           <a class="btn primary" href="#values">Browse values →</a>

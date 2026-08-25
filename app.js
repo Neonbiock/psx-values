@@ -36,8 +36,7 @@ const seedPets = [
   {id:33,name:"Huge Cyborg Capybara", category:"Huges", variant:"Normal", value:950000000, demand:8, release:"UPD 21", emoji:"🤖", change:0, obtain:"Capybara Exclusive Egg"},
   {id:34,name:"Huge Grim Reaper", category:"Huges", variant:"Normal", value:1300000000, demand:8, release:"UPD 22", emoji:"💀", change:0, obtain:"Halloween Event Eggs"},
   {id:35,name:"Huge Prickly Panda", category:"Huges", variant:"Normal", value:800000000, demand:7, release:"UPD 22", emoji:"🌵", change:0, obtain:"Elemental Exclusive Egg"},
-  {id:36,name:"Huge Inferno Cat", category:"Huges", variant:"Normal", value:1200000000, demand:7, release:"UPD 22", emoji:"🔥", change:0, obtain:"Elemental Exclusive Egg"},
-  {id:20,name:"Huge Sleipnir", category:"Huges", variant:"Normal", value:650000000, demand:7, release:"UPD 20", emoji:"🎠", change:0, obtain:"Super Exclusive Egg"},
+  {id:36,name:"Huge Inferno Cat", category:"Huges", variant:"Normal", value:1200000000, demand:7, release:"UPD 22", emoji:"🔥", change:0, obtain:"Elemental Exclusive Egg"}
 ];
 
 const defaultChanges = [
@@ -47,6 +46,12 @@ const defaultChanges = [
   {pet:"Huge Rainbow Unicorn", old:840000000, current:900000000, percent:7, demand:7, date:"2026-08-10"},
   {pet:"Huge Storm Agony", old:3650000000, current:3500000000, percent:-4, demand:9, date:"2026-08-05"}
 ];
+
+// Shown in the footer and on the home page stats. This is separate from
+// the dates in defaultChanges on purpose — update this one line whenever
+// you touch pet data, whether or not that edit happens to also be a
+// logged "recent change."
+const LAST_UPDATED = "2026-08-25";
 
 const EXCLUSIVE_TIERS = ["Huges", "Exclusives", "Titanics"];
 
@@ -81,9 +86,7 @@ function formatDate(d) {
 }
 
 function lastUpdatedLabel() {
-  const dates = changes.map(c => new Date(c.date)).filter(d => !isNaN(d));
-  if (!dates.length) return "—";
-  return formatDate(new Date(Math.max(...dates)));
+  return formatDate(LAST_UPDATED);
 }
 
 function save() {
@@ -109,80 +112,6 @@ function demandBadge(d) {
   return null;
 }
 
-// ---------- voting ----------
-// Vote totals are shared across everyone who visits the site, so they
-// live on a small free counter service (countapi.xyz) instead of in the
-// browser — a purely local count would only ever be visible to the one
-// person who clicked it.
-//
-// IMPORTANT: change VOTE_NAMESPACE to something unique to your site
-// (your GitHub username or repo name works well) before you publish.
-// countapi.xyz has no login — the namespace is the only thing keeping
-// your counters from colliding with someone else's.
-const VOTE_NAMESPACE = "psxvalues-Neonbiock";
-const voteKey = (id) => `psx_voted_${id}`;
-
-// Spam prevention: once a browser votes on a pet, that choice is saved
-// locally (not the same thing as caching pet data — this only remembers
-// "did this browser already click," nothing about values or content) and
-// both buttons lock for that pet. That stops casual repeat-clicking. It's
-// not bulletproof — someone could clear their browser storage or use a
-// private window to vote again — but doing better than that means adding
-// real accounts, which is a lot of extra infrastructure for a fan value
-// list. If it ever becomes worth it, swapping this for a proper backend
-// (Supabase, for example) is a contained change: everything vote-related
-// lives in this one section.
-function voteRow(id) {
-  return `<div class="pet-votes" data-id="${id}">
-    <button class="vote-btn vote-up" onclick="castVote(event,'${id}','up',this)"><span class="vc">▲</span> <span class="vote-count">–</span></button>
-    <button class="vote-btn vote-down" onclick="castVote(event,'${id}','down',this)"><span class="vc">▼</span> <span class="vote-count">–</span></button>
-  </div>`;
-}
-
-async function loadVotesForVisibleCards() {
-  const ids = [...new Set([...document.querySelectorAll(".pet-votes[data-id]")].map(el => el.dataset.id))];
-  ids.forEach(async (id) => {
-    const containers = document.querySelectorAll(`.pet-votes[data-id="${CSS.escape(id)}"]`);
-    const myVote = localStorage.getItem(voteKey(id));
-    let up = "–", down = "–";
-    try {
-      const [ru, rd] = await Promise.all([
-        fetch(`https://api.countapi.xyz/get/${VOTE_NAMESPACE}/up_${id}`).then(r => r.json()).catch(() => null),
-        fetch(`https://api.countapi.xyz/get/${VOTE_NAMESPACE}/down_${id}`).then(r => r.json()).catch(() => null),
-      ]);
-      up = ru?.value ?? 0;
-      down = rd?.value ?? 0;
-    } catch { /* offline or the counter service is down — leave placeholders */ }
-    containers.forEach(el => {
-      const upBtn = el.querySelector(".vote-up"), downBtn = el.querySelector(".vote-down");
-      upBtn.querySelector(".vote-count").textContent = up;
-      downBtn.querySelector(".vote-count").textContent = down;
-      if (myVote) {
-        upBtn.disabled = downBtn.disabled = true;
-        (myVote === "up" ? upBtn : downBtn).classList.add("voted");
-      }
-    });
-  });
-}
-
-async function castVote(event, id, dir, btnEl) {
-  event.stopPropagation(); // don't also open the pet detail popup
-  if (localStorage.getItem(voteKey(id))) { toast("You've already voted on this pet."); return; }
-  localStorage.setItem(voteKey(id), dir);
-  const containers = document.querySelectorAll(`.pet-votes[data-id="${CSS.escape(id)}"]`);
-  containers.forEach(el => {
-    const upBtn = el.querySelector(".vote-up"), downBtn = el.querySelector(".vote-down");
-    upBtn.disabled = downBtn.disabled = true;
-    (dir === "up" ? upBtn : downBtn).classList.add("voted");
-  });
-  try {
-    const r = await fetch(`https://api.countapi.xyz/hit/${VOTE_NAMESPACE}/${dir}_${id}`).then(r => r.json());
-    containers.forEach(el => { el.querySelector(`.vote-${dir} .vote-count`).textContent = r.value; });
-  } catch {
-    toast("Couldn't reach the vote counter — your vote is saved locally though.");
-  }
-}
-
 function petCard(p) {
   const badge = demandBadge(p.demand);
   return `<article class="pet-card" data-id="${p.id}" onclick="showPet(${p.id})">
@@ -194,9 +123,8 @@ function petCard(p) {
       <div class="pet-tags">
         ${badge ? `<span class="tag tag-badge ${badge.cls}">${badge.text}</span>` : ""}
       </div>
-      ${p.obtain ? `<div class="pet-obtain">📦 ${esc(p.obtain)}</div>` : ""}
       <div class="pet-row"><span class="value">${fmt(p.value)}</span><span class="${p.change >= 0 ? "up":"down"}">${p.change > 0 ? "+" : ""}${p.change}%</span></div>
-      ${voteRow(p.id)}
+      ${p.obtain ? `<div class="pet-obtain">${esc(p.obtain)}</div>` : ""}
     </div>
   </article>`;
 }
@@ -213,9 +141,8 @@ function changeCard(c) {
     <div class="pet-card-body">
       <div class="pet-name">${match?.emoji ? match.emoji + " " : ""}${esc(c.pet)}</div>
       <div class="pet-type">${match ? `${esc(match.category)} · ${esc(match.variant)}` : "Value update"}</div>
-      ${match?.obtain ? `<div class="pet-obtain">📦 ${esc(match.obtain)}</div>` : ""}
       <div class="pet-row"><span class="change-old">${fmt(c.old)} →</span><span class="value">${fmt(c.current)}</span></div>
-      ${voteRow(match ? match.id : slugify(c.pet))}
+      ${match?.obtain ? `<div class="pet-obtain">${esc(match.obtain)}</div>` : ""}
     </div>
   </article>`;
 }
@@ -253,7 +180,6 @@ function renderHome() {
     </div>
     <section class="pet-grid">${top.map(petCard).join("")}</section>
   `;
-  loadVotesForVisibleCards();
 }
 
 function renderValues() {
@@ -320,7 +246,6 @@ function renderValuesList() {
 
   $("#resultsMeta").textContent = `${filtered.length} result${filtered.length===1?"":"s"} · page ${currentPage} of ${totalPages}`;
   $("#petGrid").innerHTML = pageItems.length ? pageItems.map(petCard).join("") : `<div class="panel empty">Nothing matches that search. Try a different name or clear the filters.</div>`;
-  loadVotesForVisibleCards();
 
   const pag = $("#pagination");
   if (totalPages <= 1) { pag.innerHTML = ""; return; }
@@ -351,17 +276,15 @@ function showPet(id) {
       <span class="tag">Demand ${p.demand}/10</span>
       ${badge ? `<span class="tag tag-badge ${badge.cls}">${badge.text}</span>` : ""}
     </div>
-    ${p.obtain ? `<div class="pet-obtain" style="margin-top:10px;font-size:12px">📦 ${esc(p.obtain)}</div>` : ""}
     <div class="modal-stats" style="margin-top:14px">
       <div class="stat"><b>${fmt(p.value)}</b><span>Current value</span></div>
       <div class="stat"><b>${p.change>=0?"+":""}${p.change}%</b><span>Recent change</span></div>
     </div>
     <p>Released: <strong>${formatDate(p.release)}</strong></p>
-    ${voteRow(p.id)}
+    ${p.obtain ? `<div class="pet-obtain" style="font-size:12px">${esc(p.obtain)}</div>` : ""}
     <div class="modal-actions"><button class="btn primary" onclick="addToCalc(${p.id},'yours');this.closest('.modal-backdrop').remove()">Add to my offer</button><button class="btn" onclick="this.closest('.modal-backdrop').remove()">Close</button></div>
   </div>`;
   document.body.appendChild(backdrop);
-  loadVotesForVisibleCards();
 }
 
 function renderCalculator() {

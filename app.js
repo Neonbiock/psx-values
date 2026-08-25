@@ -55,6 +55,17 @@ const LAST_UPDATED = "2026-08-25";
 
 const EXCLUSIVE_TIERS = ["Huges", "Exclusives", "Titanics"];
 
+// Next-update countdown shown on the home page. Leave NEXT_UPDATE_DAYS as
+// null to just show "Coming Soon" — that's the default with nothing set.
+// To run a real countdown: set NEXT_UPDATE_LABEL to whatever you want to
+// call it (e.g. "Halloween Event"), set NEXT_UPDATE_SET_ON to today's
+// date, and set NEXT_UPDATE_DAYS to how many days from that date it
+// should count down. It'll tick down live to 0 and switch back to
+// "Coming Soon" once it hits zero.
+const NEXT_UPDATE_LABEL = "Next Update";
+const NEXT_UPDATE_SET_ON = "2026-08-25";
+const NEXT_UPDATE_DAYS = null;
+
 let pets = seedPets;
 let changes = defaultChanges;
 let currentRoute = location.hash.replace("#","") || "home";
@@ -87,6 +98,41 @@ function formatDate(d) {
 
 function lastUpdatedLabel() {
   return formatDate(LAST_UPDATED);
+}
+
+// ---------- next-update countdown ----------
+let countdownTimer = null;
+const pad2 = (n) => String(n).padStart(2, "0");
+
+function getUpdateTarget() {
+  if (NEXT_UPDATE_DAYS == null) return null;
+  const start = new Date(NEXT_UPDATE_SET_ON);
+  if (isNaN(start)) return null;
+  return new Date(start.getTime() + NEXT_UPDATE_DAYS * 24 * 60 * 60 * 1000);
+}
+
+function tickCountdown() {
+  const el = $("#nextUpdateValue");
+  if (!el) { clearInterval(countdownTimer); countdownTimer = null; return; } // navigated away from home
+  const target = getUpdateTarget();
+  const diff = target ? target - new Date() : -1;
+  if (!target || diff <= 0) {
+    el.textContent = "Coming Soon";
+    clearInterval(countdownTimer); countdownTimer = null;
+    return;
+  }
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  const seconds = Math.floor((diff % 60000) / 1000);
+  el.textContent = `${days}:${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`;
+}
+
+function startUpdateCountdown() {
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+  tickCountdown(); // paint immediately instead of waiting a second for the first tick
+  const target = getUpdateTarget();
+  if (target && target - new Date() > 0) countdownTimer = setInterval(tickCountdown, 1000);
 }
 
 function save() {
@@ -136,7 +182,7 @@ function changeCard(c) {
   const match = pets.find(p => p.name === c.pet);
   const clickable = match ? `data-id="${match.id}" onclick="showPet(${match.id})"` : "";
   return `<article class="pet-card" ${clickable}>
-    <div class="pet-card-top"><span class="${c.percent >= 0 ? "up":"down"}">${c.percent >= 0 ? "▲" : "▼"} <b>${c.percent > 0 ? "+" : ""}${c.percent}%</b></span><span>${formatDate(c.date)}</span></div>
+    <div class="pet-card-top"><span class="${c.percent >= 0 ? "up":"down"}">${c.percent >= 0 ? "▲" : "▼"} <b>${c.percent > 0 ? "+" : ""}${c.percent}%</b></span></div>
     ${petImageMarkup(c.pet, match?.image)}
     <div class="pet-card-body">
       <div class="pet-name">${match?.emoji ? match.emoji + " " : ""}${esc(c.pet)}</div>
@@ -166,6 +212,7 @@ function renderHome() {
         <div class="stat"><b>${pets.length}</b><span>Pets tracked</span></div>
         <div class="stat"><b>${exclusiveCount}</b><span>Exclusives &amp; huges</span></div>
         <div class="stat stat-date"><b>${lastUpdatedLabel()}</b><span>Last updated</span></div>
+        <div class="stat"><b id="nextUpdateValue">Coming Soon</b><span>${esc(NEXT_UPDATE_LABEL)}</span></div>
       </div>
     </section>
 
@@ -180,6 +227,7 @@ function renderHome() {
     </div>
     <section class="pet-grid">${top.map(petCard).join("")}</section>
   `;
+  startUpdateCountdown();
 }
 
 function renderValues() {
@@ -266,6 +314,10 @@ function renderValuesList() {
 function showPet(id) {
   const p = pets.find(x=>x.id===id); if(!p) return;
   const badge = demandBadge(p.demand);
+  const changeEntry = changes.find(c => c.pet === p.name);
+  // Use the logged change's real percent when there is one — p.change on
+  // its own is just a placeholder (0) for pets that aren't in the log yet.
+  const changePercent = changeEntry ? changeEntry.percent : p.change;
   const backdrop=document.createElement("div");
   backdrop.className="modal-backdrop";
   backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
@@ -278,7 +330,7 @@ function showPet(id) {
     </div>
     <div class="modal-stats" style="margin-top:14px">
       <div class="stat"><b>${fmt(p.value)}</b><span>Current value</span></div>
-      <div class="stat"><b>${p.change>=0?"+":""}${p.change}%</b><span>Recent change</span></div>
+      <div class="stat"><b>${changePercent>=0?"+":""}${changePercent}%</b><span>Recent change${changeEntry ? ` · ${formatDate(changeEntry.date)}` : ""}</span></div>
     </div>
     <p>Released: <strong>${formatDate(p.release)}</strong></p>
     ${p.obtain ? `<div class="pet-obtain" style="font-size:12px">${esc(p.obtain)}</div>` : ""}
@@ -356,6 +408,7 @@ function updateCalc() {
 }
 
 function route(){
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
   currentRoute=location.hash.replace("#","")||"home";
   document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("active",a.dataset.route===currentRoute));
   if(currentRoute==="values")renderValues();

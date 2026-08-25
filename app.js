@@ -242,7 +242,7 @@ function renderHome() {
 function renderValues() {
   const categories = ["All", ...new Set(pets.map(p => p.category))];
   $("#app").innerHTML = `
-    <div class="page-title"><h1>Values</h1><p>Filter by category, sort by whatever matters to you, and compare variants side by side.</p></div>
+    <div class="page-title"><h1>Values</h1><p>Filter by category, sort by rarity and variants.</p></div>
     <div class="toolbar">
       <input id="search" class="field" placeholder="Search for a pet…" autocomplete="off">
       <select id="sortBy" class="field">

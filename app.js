@@ -210,9 +210,9 @@ function renderHome() {
   $("#app").innerHTML = `
     <section class="hero">
       <div class="hero-copy">
-        <div class="eyebrow">Pet Simulator X</div>
+        <div class="eyebrow">PSX Reborn</div>
         <h1>The official<br><span class="grad">PSX Reborn values.</span></h1>
-        <p>Values get checked against trades and market activity, not guessed. Look a pet up, see what it's done lately, and run the numbers before you commit to a deal.</p>
+        <p>Values are accurate and are dictated by diamond worth as well as demand.</p>
         <div class="hero-actions">
           <a class="btn primary" href="#values">Browse values →</a>
           <a class="btn ghost" href="#calculator">Open calculator</a>
@@ -221,12 +221,12 @@ function renderHome() {
       <div class="hero-stats">
         <div class="stat"><b>${pets.length}</b><span>Pets tracked</span></div>
         <div class="stat"><b>${exclusiveCount}</b><span>Exclusives &amp; huges</span></div>
-        <div class="stat stat-date"><b>${lastUpdatedLabel()}</b><span>Last synced</span></div>
+        <div class="stat stat-date"><b>${lastUpdatedLabel()}</b><span>Last updated</span></div>
       </div>
     </section>
 
     <div class="section-head">
-      <div><h2>Recent movement</h2><p>Values that shifted lately.</p></div>
+      <div><h2>Recent changes</h2><p>Values that changed recently.</p></div>
     </div>
     <section class="changes-grid">${recent.map(changeCard).join("")}</section>
 

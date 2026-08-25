@@ -102,7 +102,7 @@ function demandBadge(d) {
 // (your GitHub username or repo name works well) before you publish.
 // countapi.xyz has no login — the namespace is the only thing keeping
 // your counters from colliding with someone else's.
-const VOTE_NAMESPACE = "psxvalues-CHANGE-ME";
+const VOTE_NAMESPACE = "psxvalues-Neonbiock";
 const voteKey = (id) => `psx_voted_${id}`;
 
 // Spam prevention: once a browser votes on a pet, that choice is saved

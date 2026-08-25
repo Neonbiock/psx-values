@@ -169,8 +169,8 @@ h1 .grad { background:linear-gradient(100deg, var(--violet), var(--magenta)); -w
 .pet-name { font-weight:700; margin-bottom:2px; font-size:13px; line-height:1.25; }
 .pet-type { color:var(--muted); font-size:10px; }
 .pet-obtain {
-  display:flex; align-items:center; gap:4px; margin-top:6px; color:var(--gold);
-  font-size:9.5px; font-weight:600; line-height:1.3;
+  margin-top:6px; color:var(--muted);
+  font-size:10px; font-weight:500; line-height:1.3;
 }
 .pet-row { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
 .value { font-weight:700; font-size:13px; font-family:var(--font-mono); }
@@ -181,19 +181,6 @@ h1 .grad { background:linear-gradient(100deg, var(--violet), var(--magenta)); -w
 }
 .tag-badge { background:rgba(251,191,36,.12); color:var(--gold); }
 .tag-badge.slow { background:rgba(141,129,174,.14); color:var(--muted); }
-
-/* ---------- voting ---------- */
-.pet-votes { display:flex; gap:6px; margin-top:8px; padding-top:8px; border-top:1px solid var(--line); }
-.vote-btn {
-  flex:1; display:flex; align-items:center; justify-content:center; gap:5px;
-  padding:6px; border-radius:7px; border:1px solid var(--line); background:var(--panel-2);
-  color:var(--muted); font-size:11px; font-weight:700; font-family:var(--font-mono); cursor:pointer;
-}
-.vote-btn:hover:not([disabled]) { border-color:var(--line-bright); color:var(--text); }
-.vote-btn.voted { opacity:.6; cursor:default; }
-.vote-btn.vote-up.voted { color:var(--mint); border-color:rgba(94,234,212,.35); background:rgba(94,234,212,.07); }
-.vote-btn.vote-down.voted { color:var(--rose); border-color:rgba(251,113,133,.35); background:rgba(251,113,133,.07); }
-.vote-btn[disabled] { cursor:default; }
 
 .pagination { display:flex; justify-content:center; align-items:center; gap:7px; margin-top:22px; flex-wrap:wrap; }
 .pagination button { min-width:38px; }

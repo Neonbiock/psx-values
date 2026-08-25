@@ -349,7 +349,7 @@ function showPet(id) {
 
 function renderCalculator() {
   $("#app").innerHTML=`
-    <div class="page-title"><h1>Calculator</h1><p>Stack pets on both sides of a trade and see who's actually ahead.</p></div>
+    <div class="page-title"><h1>Calculator</h1><p>Add pets on both sides of a trade and see the value difference.</p></div>
     <div class="calc-layout">
       <section class="panel">
         <div class="offer-title"><h2>Your offer</h2><strong id="yoursTotal">0</strong></div>

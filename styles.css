@@ -263,3 +263,23 @@ h1 .grad { background:linear-gradient(100deg, var(--violet), var(--magenta)); -w
   .toolbar { grid-template-columns:1fr; }
   .footer { flex-direction:column; padding:22px 16px; }
 }
+
+.status-stable {
+  background: #22c55e;
+  color: #fff;
+}
+
+.status-dropping {
+  background: #ef4444;
+  color: #fff;
+}
+
+.status-underpaid {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.status-overpaid {
+  background: #f59e0b;
+  color: #fff;
+}

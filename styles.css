@@ -283,3 +283,8 @@ h1 .grad { background:linear-gradient(100deg, var(--violet), var(--magenta)); -w
   background: #f59e0b;
   color: #fff;
 }
+
+.status-rising {
+  background: #8b5cf6;
+  color: #fff;
+}

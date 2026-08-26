@@ -184,15 +184,31 @@ function petImageMarkup(name, image) {
   </div>`;
 }
 
-function demandBadge(d) {
-  if (d >= 9) return {text:"🔥 High demand", cls:""};
-  if (d >= 7) return {text:"📈 Rising", cls:""};
-  if (d <= 3) return {text:"💤 Slow", cls:"slow"};
-  return null;
+function statusBadge(status) {
+  const badges = {
+    "Stable": {
+      text: "⚖️ Stable",
+      cls: "status-stable"
+    },
+    "Dropping": {
+      text: "📉 Dropping",
+      cls: "status-dropping"
+    },
+    "Underpaid": {
+      text: "⬇️ Underpaid",
+      cls: "status-underpaid"
+    },
+    "Overpaid": {
+      text: "⬆️ Overpaid",
+      cls: "status-overpaid"
+    }
+  };
+
+  return badges[status] || null;
 }
 
 function petCard(p) {
-  const badge = demandBadge(p.demand);
+  const badge = statusBadge(p.status);
   return `<article class="pet-card" data-id="${p.id}" onclick="showPet(${p.id})">
     <div class="pet-card-top"><span>DMD <b>${p.demand}/10</b></span><span>${formatDate(p.release)}</span></div>
     ${petImageMarkup(p.name, p.image)}

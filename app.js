@@ -182,44 +182,15 @@ const pets = [
 ];
 
 const defaultChanges = [
-  {pet:"Huge Cat", old:4600000000, current:5000000000, percent:9, demand:9, date:"2026-08-22"},
-  {pet:"Huge Dog", old:3200000000, current:3000000000, percent:-6, demand:8, date:"2026-08-19"},
-  {pet:"Huge Dragon", old:2750000000, current:3000000000, percent:9, demand:8, date:"2026-08-15"},
-  {pet:"Huge Rainbow Unicorn", old:840000000, current:900000000, percent:7, demand:7, date:"2026-08-10"},
-  {pet:"Huge Storm Agony", old:3650000000, current:3500000000, percent:-4, demand:9, date:"2026-08-05"}
+  //{pet:"Huge Cat", old:4600000000, current:5000000000, percent:9, demand:9, date:"2026-08-22"},
 ];
 
-// Shown in the footer and on the home page stats. This is separate from
-// the dates in defaultChanges on purpose — update this one line whenever
-// you touch pet data, whether or not that edit happens to also be a
-// logged "recent change."
-const LAST_UPDATED = "2026-08-25";
+// Last updated date
+const LAST_UPDATED = "2026-08-27";
 
 const EXCLUSIVE_TIERS = ["Huges", "Exclusives", "Titanics"];
 
-// Next-update countdown shown on the home page.
-//
-// NEXT_UPDATE_HOURS controls everything:
-//   - Set it to the word "off" (with the quotes) → shows "Coming Soon".
-//     This is the resting/default state.
-//   - Set it to a number of hours → starts a live countdown in
-//     days:hours:minutes:seconds (e.g. 50 becomes 2:02:00:00 — no need
-//     to do that math yourself).
-//   - When a countdown reaches zero, it freezes at 0:00:00:00 and stays
-//     there — it does NOT automatically switch back to "Coming Soon".
-//     Set NEXT_UPDATE_HOURS back to "off" yourself when you're ready to
-//     reset it for the next one.
-//
-// NEXT_UPDATE_SET_ON is the exact moment a countdown counts down FROM.
-// Whenever you switch NEXT_UPDATE_HOURS from "off" to a number, also
-// update this to right now. Include a time, not just a date, AND a UTC
-// offset at the end — that offset is what makes it count down to the
-// same real moment for every visitor no matter what timezone they're
-// in. Examples:
-//   "2026-08-27T18:00:00-04:00"  → 6:00 PM US Eastern (summer/EDT)
-//   "2026-08-27T18:00:00-07:00"  → 6:00 PM US Pacific (summer/PDT)
-//   "2026-08-27T18:00:00Z"       → 6:00 PM UTC
-// Not sure of your offset? Search "UTC offset for [your city]".
+// Next update countdown, uses UTC time (WIP)
 const NEXT_UPDATE_LABEL = "🐱Cat World UPD";
 const NEXT_UPDATE_SET_ON = "2026-08-27T12:00:00Z";
 const NEXT_UPDATE_HOURS = "51";
@@ -243,10 +214,6 @@ const slugify = (s) => String(s).toLowerCase().trim().replace(/[^a-z0-9]+/g,"-")
 
 function formatDate(d) {
   if (d instanceof Date) return isNaN(d) ? "—" : d.toLocaleDateString("en-US", {month:"short", day:"numeric", year:"numeric"});
-  // Only parse strings that actually look like a date (YYYY-MM-DD).
-  // Anything else — like "UPD 5" or "N/A" — gets shown as-is instead of
-  // being misread by the Date parser (e.g. new Date("UPD 5") silently
-  // becomes May 2001, which is wrong, not an error).
   if (typeof d !== "string" || !/^\d{4}-\d{2}-\d{2}/.test(d)) return d || "—";
   const dt = new Date(d);
   if (isNaN(dt)) return d || "—";
@@ -302,9 +269,7 @@ function save() {
   if (el) el.textContent = "Last updated " + lastUpdatedLabel();
 }
 
-// Pet images live in assets/pets/<slug>.png. If one's missing (or you
-// haven't added images yet) it just falls back to a paw icon — the emoji
-// per pet is shown next to the name instead, so nothing's lost either way.
+// Pet images in assets/pets/
 function petImageMarkup(name, image) {
   const src = image || `assets/pets/${slugify(name)}.png`;
   return `<div class="pet-image">

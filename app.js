@@ -297,7 +297,7 @@ function statusBadge(status) {
 function petCard(p) {
   const badge = statusBadge(p.status);
   return `<article class="pet-card" data-id="${p.id}" onclick="showPet(${p.id})">
-    <div class="pet-card-top"><span>${p.demand != null ? `DMD <b>${p.demand}/10</b>` : ""}</span><span>${esc(p.update || "N/A")}</span></div>
+    <div class="pet-card-top"><span>${p.demand != null ? `DMD <b>${p.demand}</b>` : ""}</span><span>${esc(p.update || "N/A")}</span></div>
     ${petImageMarkup(p.name, p.image)}
     <div class="pet-card-body">
       <div class="pet-name">${p.emoji ? p.emoji + " " : ""}${esc(p.name)}</div>

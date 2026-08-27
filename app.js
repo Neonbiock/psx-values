@@ -292,7 +292,7 @@ function statusBadge(status) {
 function petCard(p) {
   const badge = statusBadge(p.status);
   return `<article class="pet-card" data-id="${p.id}" onclick="showPet(${p.id})">
-    <div class="pet-card-top"><span>${p.demand != null ? `DMD <b>${p.demand}/10</b>` : ""}</span><span>${formatDate(p.release)}</span></div>
+    <div class="pet-card-top"><span>${p.demand != null ? `DMD <b>${p.demand}/10</b>` : ""}</span><span>${esc(p.update || "N/A")}</span></div>
     ${petImageMarkup(p.name, p.image)}
     <div class="pet-card-body">
       <div class="pet-name">${p.emoji ? p.emoji + " " : ""}${esc(p.name)}</div>
@@ -443,33 +443,98 @@ function renderValuesList() {
 }
 
 function showPet(id) {
-  const p = pets.find(x=>x.id===id); if(!p) return;
+  const p = pets.find(x => x.id === id);
+  if (!p) return;
+
   const badge = statusBadge(p.status);
   const changeEntry = changes.find(c => c.pet === p.name);
-  // Use the logged change's real percent when there is one — p.change on
-  // its own is just a placeholder (0) for pets that aren't in the log yet.
+
+  // Use the real logged change where available.
   const changePercent = changeEntry ? changeEntry.percent : p.change;
-  const backdrop=document.createElement("div");
-  backdrop.className="modal-backdrop";
-  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
-  backdrop.innerHTML=`<div class="modal">
-    <div class="modal-head"><div><h2>${p.emoji ? p.emoji + " " : ""}${esc(p.name)}</h2><p>${esc(p.category)} · ${esc(p.variant)}</p></div><button class="btn" onclick="this.closest('.modal-backdrop').remove()">✕</button></div>
-    ${petImageMarkup(p.name, p.image)}
-    <div class="pet-tags" style="margin-top:12px">
-      ${p.demand != null ? `<span class="tag">Demand ${p.demand}/10</span>` : ""}
-      ${badge ? `<span class="tag tag-badge ${badge.cls}">${badge.text}</span>` : ""}
+
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) backdrop.remove();
+  });
+
+  backdrop.innerHTML = `
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <h2>${p.emoji ? p.emoji + " " : ""}${esc(p.name)}</h2>
+          <p>${esc(p.category)} · ${esc(p.variant)}</p>
+        </div>
+
+        <button
+          class="btn"
+          onclick="this.closest('.modal-backdrop').remove()"
+          aria-label="Close"
+        >✕</button>
+      </div>
+
+      <!-- SELECTED PET IMAGE -->
+      ${petImageMarkup(p.name, p.image)}
+
+      <div class="pet-tags" style="margin-top:12px">
+        ${p.demand != null
+          ? `<span class="tag">Demand ${p.demand}/10</span>`
+          : ""}
+
+        ${badge
+          ? `<span class="tag tag-badge ${badge.cls}">${badge.text}</span>`
+          : ""}
+      </div>
+
+      <div class="modal-stats" style="margin-top:14px">
+        <div class="stat">
+          <b>${fmt(p.value)}</b>
+          <span>Current value</span>
+        </div>
+
+        <div class="stat">
+          <b>${changePercent >= 0 ? "+" : ""}${changePercent}%</b>
+          <span>
+            Recent change${changeEntry
+              ? ` · ${formatDate(changeEntry.date)}`
+              : ""}
+          </span>
+        </div>
+
+        <!-- UPDATE NUMBER -->
+        <div class="stat">
+          <b>${esc(p.update || "N/A")}</b>
+          <span>Released</span>
+        </div>
+      </div>
+
+      ${p.obtain
+        ? `<p style="margin-top:14px">
+             Obtained from: <strong>${esc(p.obtain)}</strong>
+           </p>`
+        : ""}
+
+      <div class="modal-actions">
+        <button
+          class="btn primary"
+          onclick="addToCalc(${p.id},'yours');this.closest('.modal-backdrop').remove()"
+        >
+          Add to my offer
+        </button>
+
+        <button
+          class="btn"
+          onclick="this.closest('.modal-backdrop').remove()"
+        >
+          Close
+        </button>
+      </div>
     </div>
-    <div class="modal-stats" style="margin-top:14px">
-      <div class="stat"><b>${fmt(p.value)}</b><span>Current value</span></div>
-      <div class="stat"><b>${changePercent>=0?"+":""}${changePercent}%</b><span>Recent change${changeEntry ? ` · ${formatDate(changeEntry.date)}` : ""}</span></div>
-    </div>
-    <p>Released: <strong>${formatDate(p.release)}</strong></p>
-    ${p.obtain ? `<div class="pet-obtain" style="font-size:12px">${esc(p.obtain)}</div>` : ""}
-    <div class="modal-actions"><button class="btn primary" onclick="addToCalc(${p.id},'yours');this.closest('.modal-backdrop').remove()">Add to my offer</button><button class="btn" onclick="this.closest('.modal-backdrop').remove()">Close</button></div>
-  </div>`;
+  `;
+
   document.body.appendChild(backdrop);
 }
-
 function renderCalculator() {
   $("#app").innerHTML=`
     <div class="page-title"><h1>Calculator</h1><p>Add pets on both sides of a trade and see the value difference.</p></div>

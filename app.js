@@ -181,6 +181,11 @@ const pets = [
   { name: "Rainbow Huge Scary Corgi", value: "2.5B", demand: "N/A", status: "Dropping", category: "Rainbow Huges", variant: "Rainbow", update: "UPD 22", emoji: "👻", obtain: "Halloween Gifts", change: 0 }
 ];
 
+// Give every pet a unique ID
+pets.forEach((pet, index) => {
+  pet.id = index + 1;
+});
+
 const defaultChanges = [
   //{pet:"Huge Cat", old:4600000000, current:5000000000, percent:9, demand:9, date:"2026-08-22"},
 ];

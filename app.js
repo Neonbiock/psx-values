@@ -226,7 +226,6 @@ const NEXT_UPDATE_LABEL = "🐱Cat World UPD";
 const NEXT_UPDATE_SET_ON = "2026-08-27T12:00:00Z";
 const NEXT_UPDATE_HOURS = "51";
 
-let pets = seedPets;
 let changes = defaultChanges;
 let currentRoute = location.hash.replace("#","") || "home";
 let currentPage = 1;

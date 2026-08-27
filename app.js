@@ -2055,16 +2055,32 @@ const LAST_UPDATED = "2026-08-25";
 
 const EXCLUSIVE_TIERS = ["Huges", "Exclusives", "Titanics"];
 
-// Next-update countdown shown on the home page. Leave NEXT_UPDATE_DAYS as
-// null to just show "Coming Soon" — that's the default with nothing set.
-// To run a real countdown: set NEXT_UPDATE_LABEL to whatever you want to
-// call it (e.g. "Halloween Event"), set NEXT_UPDATE_SET_ON to today's
-// date, and set NEXT_UPDATE_DAYS to how many days from that date it
-// should count down. It'll tick down live to 0 and switch back to
-// "Coming Soon" once it hits zero.
-const NEXT_UPDATE_LABEL = "Next Update";
-const NEXT_UPDATE_SET_ON = "2026-08-25";
-const NEXT_UPDATE_DAYS = null;
+// Next-update countdown shown on the home page.
+//
+// NEXT_UPDATE_HOURS controls everything:
+//   - Set it to the word "off" (with the quotes) → shows "Coming Soon".
+//     This is the resting/default state.
+//   - Set it to a number of hours → starts a live countdown in
+//     days:hours:minutes:seconds (e.g. 50 becomes 2:02:00:00 — no need
+//     to do that math yourself).
+//   - When a countdown reaches zero, it freezes at 0:00:00:00 and stays
+//     there — it does NOT automatically switch back to "Coming Soon".
+//     Set NEXT_UPDATE_HOURS back to "off" yourself when you're ready to
+//     reset it for the next one.
+//
+// NEXT_UPDATE_SET_ON is the exact moment a countdown counts down FROM.
+// Whenever you switch NEXT_UPDATE_HOURS from "off" to a number, also
+// update this to right now. Include a time, not just a date, AND a UTC
+// offset at the end — that offset is what makes it count down to the
+// same real moment for every visitor no matter what timezone they're
+// in. Examples:
+//   "2026-08-27T18:00:00-04:00"  → 6:00 PM US Eastern (summer/EDT)
+//   "2026-08-27T18:00:00-07:00"  → 6:00 PM US Pacific (summer/PDT)
+//   "2026-08-27T18:00:00Z"       → 6:00 PM UTC
+// Not sure of your offset? Search "UTC offset for [your city]".
+const NEXT_UPDATE_LABEL = "🐱Cat World UPD";
+const NEXT_UPDATE_SET_ON = "2026-08-27T12:00:00Z";
+const NEXT_UPDATE_HOURS = "51";
 
 let pets = seedPets;
 let changes = defaultChanges;
@@ -2087,8 +2103,8 @@ const slugify = (s) => String(s).toLowerCase().trim().replace(/[^a-z0-9]+/g,"-")
 function formatDate(d) {
   if (d instanceof Date) return isNaN(d) ? "—" : d.toLocaleDateString("en-US", {month:"short", day:"numeric", year:"numeric"});
   // Only parse strings that actually look like a date (YYYY-MM-DD).
-  // Anything else — like "UPD 5" — gets shown as-is instead of being
-  // misread by the Date parser (e.g. new Date("UPD 5") silently
+  // Anything else — like "UPD 5" or "N/A" — gets shown as-is instead of
+  // being misread by the Date parser (e.g. new Date("UPD 5") silently
   // becomes May 2001, which is wrong, not an error).
   if (typeof d !== "string" || !/^\d{4}-\d{2}-\d{2}/.test(d)) return d || "—";
   const dt = new Date(d);
@@ -2105,19 +2121,24 @@ let countdownTimer = null;
 const pad2 = (n) => String(n).padStart(2, "0");
 
 function getUpdateTarget() {
-  if (NEXT_UPDATE_DAYS == null) return null;
+  if (typeof NEXT_UPDATE_HOURS !== "number") return null; // "off" (or anything non-numeric)
   const start = new Date(NEXT_UPDATE_SET_ON);
   if (isNaN(start)) return null;
-  return new Date(start.getTime() + NEXT_UPDATE_DAYS * 24 * 60 * 60 * 1000);
+  return new Date(start.getTime() + NEXT_UPDATE_HOURS * 60 * 60 * 1000);
 }
 
 function tickCountdown() {
   const el = $("#nextUpdateValue");
   if (!el) { clearInterval(countdownTimer); countdownTimer = null; return; } // navigated away from home
+  if (typeof NEXT_UPDATE_HOURS !== "number") {
+    el.textContent = "Coming Soon"; // "off"
+    clearInterval(countdownTimer); countdownTimer = null;
+    return;
+  }
   const target = getUpdateTarget();
-  const diff = target ? target - new Date() : -1;
+  const diff = target ? target - new Date() : 0;
   if (!target || diff <= 0) {
-    el.textContent = "Coming Soon";
+    el.textContent = "0:00:00:00"; // countdown finished — frozen, not "Coming Soon"
     clearInterval(countdownTimer); countdownTimer = null;
     return;
   }
@@ -2153,35 +2174,19 @@ function petImageMarkup(name, image) {
 
 function statusBadge(status) {
   const badges = {
-    "Stable": {
-      text: "⚖️ Stable",
-      cls: "status-stable"
-    },
-    "Dropping": {
-      text: "📉 Dropping",
-      cls: "status-dropping"
-    },
-    "Underpaid": {
-      text: "⬇️ Underpaid",
-      cls: "status-underpaid"
-    },
-    "Overpaid": {
-      text: "⬆️ Overpaid",
-      cls: "status-overpaid"
-    },
-    "Rising": {
-      text: "📈 Rising",
-      cls: "status-rising"
-    }
+    "Stable": { text: "⚖️ Stable", cls: "status-stable" },
+    "Dropping": { text: "📉 Dropping", cls: "status-dropping" },
+    "Underpaid": { text: "⬇️ Underpaid", cls: "status-underpaid" },
+    "Overpaid": { text: "⬆️ Overpaid", cls: "status-overpaid" },
+    "Rising": { text: "📈 Rising", cls: "status-rising" }
   };
-
   return badges[status] || null;
 }
 
 function petCard(p) {
   const badge = statusBadge(p.status);
   return `<article class="pet-card" data-id="${p.id}" onclick="showPet(${p.id})">
-    <div class="pet-card-top"><span>DMD <b>${p.demand}/10</b></span><span>${formatDate(p.release)}</span></div>
+    <div class="pet-card-top"><span>${p.demand != null ? `DMD <b>${p.demand}/10</b>` : ""}</span><span>${formatDate(p.release)}</span></div>
     ${petImageMarkup(p.name, p.image)}
     <div class="pet-card-body">
       <div class="pet-name">${p.emoji ? p.emoji + " " : ""}${esc(p.name)}</div>
@@ -2198,7 +2203,7 @@ function petCard(p) {
 function changeCard(c) {
   // Reuses the exact same .pet-card markup/classes as the Values grid so
   // both sections render identically — this card just swaps in the
-  // before/after value instead of the demand badge as its headline stat.
+  // before/after value instead of the status badge as its headline stat.
   const match = pets.find(p => p.name === c.pet);
   const clickable = match ? `data-id="${match.id}" onclick="showPet(${match.id})"` : "";
   return `<article class="pet-card" ${clickable}>
@@ -2214,7 +2219,7 @@ function changeCard(c) {
 }
 
 function renderHome() {
-  const top = [...pets].sort((a,b)=>b.value-a.value).slice(0,5);
+  const top = [...pets].sort((a,b)=>(Number(b.value)||0)-(Number(a.value)||0)).slice(0,5);
   const recent = [...changes].slice(0,5);
   const exclusiveCount = pets.filter(p => EXCLUSIVE_TIERS.includes(p.category)).length;
   $("#app").innerHTML = `
@@ -2303,9 +2308,9 @@ function renderValuesList() {
     (!search || p.name.toLowerCase().includes(search))
   );
 
-  if (sortBy === "value-desc") filtered.sort((a,b)=>b.value-a.value);
-  else if (sortBy === "value-asc") filtered.sort((a,b)=>a.value-b.value);
-  else if (sortBy === "demand-desc") filtered.sort((a,b)=>b.demand-a.demand);
+  if (sortBy === "value-desc") filtered.sort((a,b)=>(Number(b.value)||0)-(Number(a.value)||0));
+  else if (sortBy === "value-asc") filtered.sort((a,b)=>(Number(a.value)||0)-(Number(b.value)||0));
+  else if (sortBy === "demand-desc") filtered.sort((a,b)=>(b.demand??-1)-(a.demand??-1));
   else if (sortBy === "name-asc") filtered.sort((a,b)=>a.name.localeCompare(b.name));
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
@@ -2333,7 +2338,7 @@ function renderValuesList() {
 
 function showPet(id) {
   const p = pets.find(x=>x.id===id); if(!p) return;
-  const badge = demandBadge(p.demand);
+  const badge = statusBadge(p.status);
   const changeEntry = changes.find(c => c.pet === p.name);
   // Use the logged change's real percent when there is one — p.change on
   // its own is just a placeholder (0) for pets that aren't in the log yet.
@@ -2345,7 +2350,7 @@ function showPet(id) {
     <div class="modal-head"><div><h2>${p.emoji ? p.emoji + " " : ""}${esc(p.name)}</h2><p>${esc(p.category)} · ${esc(p.variant)}</p></div><button class="btn" onclick="this.closest('.modal-backdrop').remove()">✕</button></div>
     ${petImageMarkup(p.name, p.image)}
     <div class="pet-tags" style="margin-top:12px">
-      <span class="tag">Demand ${p.demand}/10</span>
+      ${p.demand != null ? `<span class="tag">Demand ${p.demand}/10</span>` : ""}
       ${badge ? `<span class="tag tag-badge ${badge.cls}">${badge.text}</span>` : ""}
     </div>
     <div class="modal-stats" style="margin-top:14px">
@@ -2413,8 +2418,8 @@ function removeCalc(side, i) { calcOffers[side].splice(i,1); renderOffers(); }
 function clearCalc() { calcOffers = { yours: [], theirs: [] }; renderOffers(); }
 
 function updateCalc() {
-  const a = calcOffers.yours.reduce((s,p)=>s+p.value,0);
-  const b = calcOffers.theirs.reduce((s,p)=>s+p.value,0);
+  const a = calcOffers.yours.reduce((s,p)=>s+(Number(p.value)||0),0);
+  const b = calcOffers.theirs.reduce((s,p)=>s+(Number(p.value)||0),0);
   $("#yoursTotal").textContent = fmt(a);
   $("#theirsTotal").textContent = fmt(b);
   const d = a - b;

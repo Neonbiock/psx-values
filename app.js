@@ -207,6 +207,8 @@ const perPage = 12;
 let calcOffers = { yours: [], theirs: [] };
 
 const $ = (s) => document.querySelector(s);
+
+// Formats a NUMBER into a display string like "4.25B"
 const fmt = (n) => {
   if (n >= 1e12) return (n/1e12).toFixed(2).replace(/\.00$/,"") + "T";
   if (n >= 1e9) return (n/1e9).toFixed(2).replace(/\.00$/,"") + "B";
@@ -214,6 +216,20 @@ const fmt = (n) => {
   if (n >= 1e3) return (n/1e3).toFixed(2).replace(/\.00$/,"") + "K";
   return n.toLocaleString();
 };
+
+// NEW: parses a stored value string like "4.25B" / "225M" / "N/A" / "O/C"
+// back into an actual number so math (sums, sorting) works correctly.
+// This is what the calculator and value-sorting now use instead of Number(p.value).
+function parseValue(v) {
+  if (typeof v === "number") return v;
+  if (typeof v !== "string") return 0;
+  const s = v.trim().toUpperCase();
+  const m = s.match(/^([\d.]+)\s*([KMBT])?$/);
+  if (!m) return 0; // handles "N/A", "O/C", empty, etc.
+  const mult = { K: 1e3, M: 1e6, B: 1e9, T: 1e12 }[m[2]] || 1;
+  return parseFloat(m[1]) * mult;
+}
+
 const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const slugify = (s) => String(s).toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
 
@@ -330,7 +346,8 @@ function changeCard(c) {
 }
 
 function renderHome() {
-  const top = [...pets].sort((a,b)=>(Number(b.value)||0)-(Number(a.value)||0)).slice(0,5);
+  // FIX: was Number(a.value)/Number(b.value), which is NaN for "4.25B" strings.
+  const top = [...pets].sort((a,b)=>parseValue(b.value)-parseValue(a.value)).slice(0,5);
   const recent = [...changes].slice(0,5);
   const exclusiveCount = pets.filter(p => EXCLUSIVE_TIERS.includes(p.category)).length;
   $("#app").innerHTML = `
@@ -419,8 +436,10 @@ function renderValuesList() {
     (!search || p.name.toLowerCase().includes(search))
   );
 
-  if (sortBy === "value-desc") filtered.sort((a,b)=>(Number(b.value)||0)-(Number(a.value)||0));
-  else if (sortBy === "value-asc") filtered.sort((a,b)=>(Number(a.value)||0)-(Number(b.value)||0));
+  // FIX: was Number(a.value)/Number(b.value) — NaN for string values like "4.25B",
+  // so these sorts silently did nothing before.
+  if (sortBy === "value-desc") filtered.sort((a,b)=>parseValue(b.value)-parseValue(a.value));
+  else if (sortBy === "value-asc") filtered.sort((a,b)=>parseValue(a.value)-parseValue(b.value));
   else if (sortBy === "demand-desc") filtered.sort((a,b)=>(b.demand??-1)-(a.demand??-1));
   else if (sortBy === "name-asc") filtered.sort((a,b)=>a.name.localeCompare(b.name));
 
@@ -594,8 +613,11 @@ function removeCalc(side, i) { calcOffers[side].splice(i,1); renderOffers(); }
 function clearCalc() { calcOffers = { yours: [], theirs: [] }; renderOffers(); }
 
 function updateCalc() {
-  const a = calcOffers.yours.reduce((s,p)=>s+(Number(p.value)||0),0);
-  const b = calcOffers.theirs.reduce((s,p)=>s+(Number(p.value)||0),0);
+  // FIX: was Number(p.value), which is NaN for values stored as strings like
+  // "4.25B" — every offer silently totaled to 0. parseValue() actually
+  // converts the suffix notation into a real number.
+  const a = calcOffers.yours.reduce((s,p)=>s+parseValue(p.value),0);
+  const b = calcOffers.theirs.reduce((s,p)=>s+parseValue(p.value),0);
   $("#yoursTotal").textContent = fmt(a);
   $("#theirsTotal").textContent = fmt(b);
   const d = a - b;

@@ -348,7 +348,7 @@ function renderHome() {
         <div class="stat"><b>${pets.length}</b><span>Pets tracked</span></div>
         <div class="stat"><b>${exclusiveCount}</b><span>Exclusives &amp; huges</span></div>
         <div class="stat stat-date"><b>${lastUpdatedLabel()}</b><span>Last updated</span></div>
-        <div class="stat"><b id="nextUpdateValue">Coming Soon</b><span>${esc(NEXT_UPDATE_LABEL)}</span></div>
+        <div class="stat"><b id="nextUpdateValue">29/08/2026</b><span>${esc(NEXT_UPDATE_LABEL)}</span></div>
       </div>
     </section>
 

@@ -244,7 +244,7 @@ function tickCountdown() {
   const el = $("#nextUpdateValue");
   if (!el) { clearInterval(countdownTimer); countdownTimer = null; return; } // navigated away from home
   if (typeof NEXT_UPDATE_HOURS !== "number") {
-    el.textContent = "Coming Soon"; // "off"
+    el.textContent = "29/08/2026"; // "off"
     clearInterval(countdownTimer); countdownTimer = null;
     return;
   }

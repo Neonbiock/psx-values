@@ -486,7 +486,7 @@ function renderCalculator() {
       </section>
       <aside class="calc-side">
         <div class="eyebrow">Trade evaluation</div>
-        <div id="calcResult" class="calc-result"><strong>ADD PETS</strong><p style="margin:5px 0 0;color:var(--muted)">Add pets to both sides to see how the trade shakes out.</p></div>
+        <div id="calcResult" class="calc-result"><strong>ADD PETS</strong><p style="margin:5px 0 0;color:var(--muted)">Add pets to both sides to see who is winning.</p></div>
         <div><span style="color:var(--muted);font-size:12px">Value difference</span><div class="calc-total" id="diff">0</div></div>
         <p class="helper-note">This only compares listed values. Demand and how badly someone wants a specific pet can still make a "fair" trade feel lopsided in practice.</p>
         <button class="btn" style="margin-top:10px;width:100%" onclick="clearCalc()">Clear calculator</button>
